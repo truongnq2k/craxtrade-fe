@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { DashboardLayout } from '../components/DashboardLayout'
 import { apiFetch } from '../utils/api'
-import { useAuth } from '../hooks/useAuth'
+import { useAuthStore } from '../store/auth'
 
 type Transaction = {
   id: string
@@ -13,7 +13,7 @@ type Transaction = {
 }
 
 export function UserTransactionsPage() {
-  const { user } = useAuth()
+  const { user } = useAuthStore()
   const [items, setItems] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -21,16 +21,17 @@ export function UserTransactionsPage() {
   useEffect(() => {
     async function load() {
       try {
-        if (!user?.sub && !(user as any)?.userId) {
+        if (!user?.sub) {
           setError('Thiếu userId trong token')
           return
         }
-        const userId = (user as any)?.userId || (user as any)?.id || (user as any)?.sub
-        const res = await apiFetch<{ success: boolean; data: any }>(`/api/users/${userId}/transactions`)
-        const data = (res as any).data?.transactions || (res as any).data || []
+        const userId = user?.sub
+        const res = await apiFetch<{ success: boolean; data: { transactions: Transaction[] } }>(`/api/users/${userId}/transactions`)
+        const data = res.data?.transactions || []
         setItems(data)
-      } catch (err: any) {
-        setError(err.message || 'Load failed')
+      } catch (err: unknown) {
+        const error = err as { message?: string }
+        setError(error.message || 'Load failed')
       } finally {
         setLoading(false)
       }

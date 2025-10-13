@@ -16,7 +16,7 @@ export function AdminExchangeAccountsPage() {
   const [items, setItems] = useState<ExchangeAccount[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [stats, setStats] = useState<any>(null)
+  const [stats, setStats] = useState<{ totalAccounts: number; activeAccounts: number; inactiveAccounts: number; testnetAccounts: number; exchanges: string[] } | null>(null)
 
   useEffect(() => {
     loadAccounts()
@@ -26,11 +26,12 @@ export function AdminExchangeAccountsPage() {
   async function loadAccounts() {
     try {
       setLoading(true)
-      const res = await apiFetch<{ success: boolean; data: any }>('/api/exchange-accounts')
-      const data = (res as any).data?.accounts || (res as any).data || []
+      const res = await apiFetch<{ success: boolean; data: { accounts: ExchangeAccount[] } }>('/api/exchange-accounts')
+      const data = res.data?.accounts || []
       setItems(data)
-    } catch (err: any) {
-      setError(err.message || 'Load failed')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Load failed')
     } finally {
       setLoading(false)
     }
@@ -38,9 +39,9 @@ export function AdminExchangeAccountsPage() {
 
   async function loadStats() {
     try {
-      const res = await apiFetch<{ success: boolean; data: any }>('/api/exchange-accounts/stats')
+      const res = await apiFetch<{ success: boolean; data: typeof stats }>('/api/exchange-accounts/stats')
       setStats(res.data)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Load stats failed:', err)
     }
   }

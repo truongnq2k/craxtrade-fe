@@ -21,7 +21,7 @@ export function AdminNewsPage() {
   const [items, setItems] = useState<News[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [stats, setStats] = useState<any>(null)
+  const [stats, setStats] = useState<{ totalNews: number; publishedNews: number; activeNews: number; avgSentiment: string; positiveNews: number; negativeNews: number; highImpactNews: number } | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [editingItem, setEditingItem] = useState<News | null>(null)
   const [formData, setFormData] = useState({
@@ -45,11 +45,12 @@ export function AdminNewsPage() {
   async function loadNews() {
     try {
       setLoading(true)
-      const res = await apiFetch<{ success: boolean; data: any }>('/api/news')
-      const data = (res as any).data?.news || (res as any).data || []
+      const res = await apiFetch<{ success: boolean; data: { news: News[] } }>('/api/news')
+      const data = res.data?.news || []
       setItems(data)
-    } catch (err: any) {
-      setError(err.message || 'Load failed')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Load failed')
     } finally {
       setLoading(false)
     }
@@ -57,9 +58,9 @@ export function AdminNewsPage() {
 
   async function loadStats() {
     try {
-      const res = await apiFetch<{ success: boolean; data: any }>('/api/news/stats')
+      const res = await apiFetch<{ success: boolean; data: typeof stats }>('/api/news/stats')
       setStats(res.data)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Load stats failed:', err)
     }
   }
@@ -121,8 +122,9 @@ export function AdminNewsPage() {
       }
       resetForm()
       loadNews()
-    } catch (err: any) {
-      setError(err.message || 'Save failed')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Save failed')
     }
   }
 
@@ -131,8 +133,9 @@ export function AdminNewsPage() {
     try {
       await apiFetch(`/api/news/${id}`, { method: 'DELETE' })
       loadNews()
-    } catch (err: any) {
-      setError(err.message || 'Delete failed')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Delete failed')
     }
   }
 

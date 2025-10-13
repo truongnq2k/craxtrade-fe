@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { DashboardLayout } from '../components/DashboardLayout'
 import { apiFetch } from '../utils/api'
-import { useAuth } from '../hooks/useAuth'
+import { useAuthStore } from '../store/auth'
 
 type Voucher = {
   id: string
@@ -18,7 +18,7 @@ type Voucher = {
 }
 
 export function UserVouchersPage() {
-  const { user } = useAuth()
+  const { user } = useAuthStore()
   const [voucherCode, setVoucherCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -36,7 +36,7 @@ export function UserVouchersPage() {
 
     try {
       // First get voucher details
-      const voucherRes = await apiFetch<{ success: boolean; data: any }>(`/api/vouchers/code/${voucherCode}`)
+      const voucherRes = await apiFetch<{ success: boolean; data: Voucher }>(`/api/vouchers/code/${voucherCode}`)
       const voucher = voucherRes.data
 
       if (!voucher.isActive) {
@@ -61,13 +61,14 @@ export function UserVouchersPage() {
       // Use the voucher
       await apiFetch(`/api/vouchers/${voucher.id}/use`, {
         method: 'POST',
-        body: { userId: (user as any)?.userId || (user as any)?.id || (user as any)?.sub }
+        body: { userId: user?.sub || user?.id }
       })
 
       setSuccess(`Sử dụng voucher thành công! Nhận được ${voucher.credits} credits`)
       setVoucherCode('')
-    } catch (err: any) {
-      setError(err.message || 'Sử dụng voucher thất bại')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Sử dụng voucher thất bại')
     } finally {
       setLoading(false)
     }

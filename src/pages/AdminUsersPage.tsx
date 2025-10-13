@@ -53,8 +53,9 @@ export function AdminUsersPage() {
         total: data.pagination?.total || 0,
         pages: data.pagination?.pages || 0
       }))
-    } catch (err: any) {
-      setError(err.message || 'Load failed')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Load failed')
     } finally {
       setLoading(false)
     }
@@ -64,8 +65,9 @@ export function AdminUsersPage() {
     try {
       await apiFetch(`/api/users/${id}/toggle`, { method: 'PUT' })
       loadUsers()
-    } catch (err: any) {
-      setError(err.message || 'Toggle failed')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Toggle failed')
     }
   }
 
@@ -74,7 +76,7 @@ export function AdminUsersPage() {
     if (!amount || isNaN(Number(amount))) return
 
     const type = prompt('Loại (PURCHASE/BONUS/REFUND):')
-    if (!['PURCHASE', 'BONUS', 'REFUND'].includes(type)) return
+    if (!type || !['PURCHASE', 'BONUS', 'REFUND'].includes(type)) return
 
     try {
       await apiFetch('/api/users/credits', {
@@ -87,8 +89,9 @@ export function AdminUsersPage() {
         }
       })
       loadUsers()
-    } catch (err: any) {
-      setError(err.message || 'Add credits failed')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Add credits failed')
     }
   }
 

@@ -20,7 +20,7 @@ export function AdminSignalsPage() {
   const [items, setItems] = useState<Signal[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [stats, setStats] = useState<any>(null)
+  const [stats, setStats] = useState<{ totalSignals: number; buySignals: number; sellSignals: number; holdSignals: number; avgConfidence: string; activeSignals: number } | null>(null)
   const [filters, setFilters] = useState({
     type: '',
     direction: '',
@@ -40,11 +40,12 @@ export function AdminSignalsPage() {
       if (filters.direction) params.append('direction', filters.direction)
       if (filters.symbol) params.append('symbol', filters.symbol)
       
-      const res = await apiFetch<{ success: boolean; data: any }>(`/api/signals?${params.toString()}`)
-      const data = (res as any).data?.signals || (res as any).data || []
+      const res = await apiFetch<{ success: boolean; data: { signals: Signal[] } }>(`/api/signals?${params.toString()}`)
+      const data = res.data?.signals || []
       setItems(data)
-    } catch (err: any) {
-      setError(err.message || 'Load failed')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Load failed')
     } finally {
       setLoading(false)
     }
@@ -52,9 +53,9 @@ export function AdminSignalsPage() {
 
   async function loadStats() {
     try {
-      const res = await apiFetch<{ success: boolean; data: any }>('/api/signals/stats')
+      const res = await apiFetch<{ success: boolean; data: typeof stats }>('/api/signals/stats')
       setStats(res.data)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Load stats failed:', err)
     }
   }

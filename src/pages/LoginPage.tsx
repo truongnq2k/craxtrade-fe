@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { BlankLayout } from '../components/BlankLayout'
-import { useAuth } from '../hooks/useAuth'
-import { apiFetch, ApiPaths } from '../utils/api'
+import { useAuthStore } from '../store/auth'
+import { authService } from '../services/auth.service'
 import { useNavigate } from 'react-router-dom'
 
 export function LoginPage() {
-  const { login } = useAuth()
+  const { login } = useAuthStore()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -17,16 +17,12 @@ export function LoginPage() {
     setError(null)
     setLoading(true)
     try {
-      const res = await apiFetch<{ success: boolean; data: { tokens: { accessToken: string } } }>(ApiPaths.login, {
-        method: 'POST',
-        body: { email, password },
-        auth: false,
-      })
-      const jwt = res.data.tokens.accessToken
-      login(jwt)
+      const response = await authService.login({ email, password })
+      login(response.tokens.accessToken)
       navigate('/dashboard')
-    } catch (err: any) {
-      setError(err.message || 'Login failed')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Login failed')
     } finally {
       setLoading(false)
     }
@@ -62,5 +58,3 @@ export function LoginPage() {
     </BlankLayout>
   )
 }
-
-

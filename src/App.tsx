@@ -2,6 +2,7 @@ import { Navigate, Outlet, createBrowserRouter, RouterProvider } from 'react-rou
 import { BlankLayout } from './components/BlankLayout'
 import { DashboardLayout } from './components/DashboardLayout'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { useAuthStore } from './store/auth'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
@@ -23,6 +24,17 @@ import { AdminTransactionsPage } from './pages/AdminTransactionsPage'
 import { AdminVouchersPage } from './pages/AdminVouchersPage'
 import { AdminNewsPage } from './pages/AdminNewsPage'
 import { AdminCreditPackagesPage } from './pages/AdminCreditPackagesPage'
+import { useEffect } from 'react'
+
+function AppContent() {
+  const { hydrateFromStorage } = useAuthStore()
+  
+  useEffect(() => {
+    hydrateFromStorage()
+  }, [hydrateFromStorage])
+
+  return <RouterProvider router={router} />
+}
 
 const router = createBrowserRouter([
   {
@@ -189,8 +201,4 @@ const router = createBrowserRouter([
   { path: '*', element: <Navigate to="/" replace /> },
 ])
 
-function App() {
-  return <RouterProvider router={router} />
-}
-
-export default App
+export default AppContent

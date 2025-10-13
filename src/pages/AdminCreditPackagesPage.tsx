@@ -38,11 +38,12 @@ export function AdminCreditPackagesPage() {
   async function loadPackages() {
     try {
       setLoading(true)
-      const res = await apiFetch<{ success: boolean; data: any }>('/api/credit-packages')
-      const data = (res as any).data?.packages || (res as any).data || []
+      const res = await apiFetch<{ success: boolean; data: { packages: CreditPackage[] } }>('/api/credit-packages')
+      const data = res.data?.packages || []
       setItems(data)
-    } catch (err: any) {
-      setError(err.message || 'Load failed')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Load failed')
     } finally {
       setLoading(false)
     }
@@ -94,8 +95,9 @@ export function AdminCreditPackagesPage() {
       }
       resetForm()
       loadPackages()
-    } catch (err: any) {
-      setError(err.message || 'Save failed')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Save failed')
     }
   }
 
@@ -104,8 +106,9 @@ export function AdminCreditPackagesPage() {
     try {
       await apiFetch(`/api/credit-packages/${id}`, { method: 'DELETE' })
       loadPackages()
-    } catch (err: any) {
-      setError(err.message || 'Delete failed')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Delete failed')
     }
   }
 

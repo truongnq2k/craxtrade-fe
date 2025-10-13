@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { DashboardLayout } from '../components/DashboardLayout'
 import { apiFetch } from '../utils/api'
-import { useAuth } from '../hooks/useAuth'
+import { useAuthStore } from '../store/auth'
 
 type Trade = {
   id: string
@@ -17,7 +17,7 @@ type Trade = {
 }
 
 export function UserTradesPage() {
-  const { user } = useAuth()
+  const { user } = useAuthStore()
   const [items, setItems] = useState<Trade[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -25,16 +25,17 @@ export function UserTradesPage() {
   useEffect(() => {
     async function load() {
       try {
-        if (!user?.sub && !(user as any)?.userId) {
+        if (!user?.sub) {
           setError('Thiếu userId trong token')
           return
         }
-        const userId = (user as any)?.userId || (user as any)?.id || (user as any)?.sub
-        const res = await apiFetch<{ success: boolean; data: any }>(`/api/users/${userId}/trades`)
-        const data = (res as any).data?.trades || (res as any).data || []
+        const userId = user?.sub
+        const res = await apiFetch<{ success: boolean; data: { trades: Trade[] } }>(`/api/users/${userId}/trades`)
+        const data = res.data?.trades || []
         setItems(data)
-      } catch (err: any) {
-        setError(err.message || 'Load failed')
+      } catch (err: unknown) {
+        const error = err as { message?: string }
+        setError(error.message || 'Load failed')
       } finally {
         setLoading(false)
       }
@@ -56,8 +57,9 @@ export function UserTradesPage() {
       })
       // Reload data
       window.location.reload()
-    } catch (err: any) {
-      setError(err.message || 'Close trade failed')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Close trade failed')
     }
   }
 

@@ -1,10 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
+import { useAuthStore } from '../store/auth'
 
 export function Header() {
-  const { isAuthenticated, user, logout } = useAuth()
+  const { isAuthenticated, user, logout } = useAuthStore()
   const navigate = useNavigate()
-  const isAdmin = (user as any)?.role === 'ADMIN'
+  const isAdmin = user?.role === 'ADMIN'
 
   function handleLogout() {
     logout()
@@ -67,7 +67,7 @@ export function Header() {
               
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-500">
-                  {(user as any)?.name || (user as any)?.email}
+                  {String(user?.name || user?.email || 'User')}
                 </span>
                 <button 
                   onClick={handleLogout}
@@ -88,5 +88,3 @@ export function Header() {
     </header>
   )
 }
-
-

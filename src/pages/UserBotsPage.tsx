@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { DashboardLayout } from '../components/DashboardLayout'
 import { apiFetch } from '../utils/api'
-import { useAuth } from '../hooks/useAuth'
+import { useAuthStore } from '../store/auth'
 
 type BotInstance = {
   id: string
@@ -14,7 +14,7 @@ type BotInstance = {
 }
 
 export function UserBotsPage() {
-  const { user } = useAuth()
+  const { user } = useAuthStore()
   const [items, setItems] = useState<BotInstance[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -22,16 +22,17 @@ export function UserBotsPage() {
   useEffect(() => {
     async function load() {
       try {
-        if (!user?.sub && !(user as any)?.userId) {
+        if (!user?.sub) {
           setError('Thiếu userId trong token')
           return
         }
-        const userId = (user as any)?.userId || (user as any)?.id || (user as any)?.sub
-        const res = await apiFetch<{ success: boolean; data: any }>(`/api/users/${userId}/bot-instances`)
-        const data = (res as any).data?.bots || (res as any).data || []
+        const userId = user?.sub
+        const res = await apiFetch<{ success: boolean; data: { bots: BotInstance[] } }>(`/api/users/${userId}/bot-instances`)
+        const data = res.data?.bots || []
         setItems(data)
-      } catch (err: any) {
-        setError(err.message || 'Load failed')
+      } catch (err: unknown) {
+        const error = err as { message?: string }
+        setError(error.message || 'Load failed')
       } finally {
         setLoading(false)
       }
@@ -44,8 +45,9 @@ export function UserBotsPage() {
       await apiFetch(`/api/bot-instances/${botId}/${action}`, { method: 'POST' })
       // Reload data
       window.location.reload()
-    } catch (err: any) {
-      setError(err.message || 'Action failed')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Action failed')
     }
   }
 

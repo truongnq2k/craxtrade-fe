@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { DashboardLayout } from '../components/DashboardLayout'
 import { apiFetch, ApiPaths } from '../utils/api'
-import { useAuth } from '../hooks/useAuth'
+import { useAuthStore } from '../store/auth'
 
 type ExchangeAccount = {
   id: string
@@ -11,7 +11,7 @@ type ExchangeAccount = {
 }
 
 export function UserExchangeAccountsPage() {
-  const { user } = useAuth()
+  const { user } = useAuthStore()
   const [items, setItems] = useState<ExchangeAccount[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -19,16 +19,17 @@ export function UserExchangeAccountsPage() {
   useEffect(() => {
     async function load() {
       try {
-        if (!user?.sub && !(user as any)?.userId) {
+        if (!user?.sub) {
           setError('Thiếu userId trong token')
           return
         }
-        const userId = (user as any)?.userId || (user as any)?.id || (user as any)?.sub
-        const res = await apiFetch<{ success: boolean; data: any }>(ApiPaths.userExchangeAccounts(String(userId)))
-        const data = (res as any).data?.accounts || (res as any).data || []
+        const userId = user?.sub
+        const res = await apiFetch<{ success: boolean; data: { accounts: ExchangeAccount[] } }>(ApiPaths.userExchangeAccounts(String(userId)))
+        const data = res.data?.accounts || []
         setItems(data)
-      } catch (err: any) {
-        setError(err.message || 'Load failed')
+      } catch (err: unknown) {
+        const error = err as { message?: string }
+        setError(error.message || 'Load failed')
       } finally {
         setLoading(false)
       }
@@ -66,6 +67,3 @@ export function UserExchangeAccountsPage() {
     </DashboardLayout>
   )
 }
-
-
-

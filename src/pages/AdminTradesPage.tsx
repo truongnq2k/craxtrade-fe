@@ -20,7 +20,7 @@ export function AdminTradesPage() {
   const [items, setItems] = useState<Trade[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [stats, setStats] = useState<any>(null)
+  const [stats, setStats] = useState<{ totalTrades: number; openTrades: number; closedTrades: number; totalPnl: string; winRate: number; pendingTrades: number } | null>(null)
   const [filters, setFilters] = useState({
     type: '',
     direction: '',
@@ -42,11 +42,12 @@ export function AdminTradesPage() {
       if (filters.status) params.append('status', filters.status)
       if (filters.symbol) params.append('symbol', filters.symbol)
       
-      const res = await apiFetch<{ success: boolean; data: any }>(`/api/trades?${params.toString()}`)
-      const data = (res as any).data?.trades || (res as any).data || []
+      const res = await apiFetch<{ success: boolean; data: { trades: Trade[] } }>(`/api/trades?${params.toString()}`)
+      const data = res.data?.trades || []
       setItems(data)
-    } catch (err: any) {
-      setError(err.message || 'Load failed')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Load failed')
     } finally {
       setLoading(false)
     }
@@ -54,9 +55,9 @@ export function AdminTradesPage() {
 
   async function loadStats() {
     try {
-      const res = await apiFetch<{ success: boolean; data: any }>('/api/trades/stats')
+      const res = await apiFetch<{ success: boolean; data: typeof stats }>('/api/trades/stats')
       setStats(res.data)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Load stats failed:', err)
     }
   }

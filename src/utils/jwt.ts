@@ -1,4 +1,4 @@
-import jwtDecode from 'jwt-decode'
+import { jwtDecode } from 'jwt-decode'
 import type { DecodedToken } from '../store/auth'
 
 export function decodeJwt(token: string): DecodedToken | null {
@@ -8,5 +8,3 @@ export function decodeJwt(token: string): DecodedToken | null {
     return null
   }
 }
-
-

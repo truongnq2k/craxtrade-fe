@@ -1,6 +1,7 @@
 import { BlankLayout } from '../components/BlankLayout'
 import { useState } from 'react'
-import { apiFetch, ApiPaths } from '../utils/api'
+import { useAuthStore } from '../store/auth'
+import { authService } from '../services/auth.service'
 import { useNavigate } from 'react-router-dom'
 
 export function RegisterPage() {
@@ -16,14 +17,13 @@ export function RegisterPage() {
     setError(null)
     setLoading(true)
     try {
-      await apiFetch<{ success: boolean }>(ApiPaths.signup, {
-        method: 'POST',
-        body: { name, email, password },
-        auth: false,
-      })
-      navigate('/login')
-    } catch (err: any) {
-      setError(err.message || 'Register failed')
+      const response = await authService.register({ name, email, password })
+      const { login } = useAuthStore.getState()
+      login(response.tokens.accessToken)
+      navigate('/dashboard')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Register failed')
     } finally {
       setLoading(false)
     }
@@ -67,5 +67,3 @@ export function RegisterPage() {
     </BlankLayout>
   )
 }
-
-

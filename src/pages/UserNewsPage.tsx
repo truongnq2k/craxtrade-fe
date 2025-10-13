@@ -38,11 +38,12 @@ export function UserNewsPage() {
       if (filter.impact) params.append('impact', filter.impact)
       if (filter.symbol) params.append('symbol', filter.symbol)
       
-      const res = await apiFetch<{ success: boolean; data: any }>(`/api/news?${params.toString()}`)
-      const data = (res as any).data?.news || (res as any).data || []
+      const res = await apiFetch<{ success: boolean; data: { news: News[] } }>(`/api/news?${params.toString()}`)
+      const data = res.data?.news || []
       setItems(data)
-    } catch (err: any) {
-      setError(err.message || 'Load failed')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Load failed')
     } finally {
       setLoading(false)
     }

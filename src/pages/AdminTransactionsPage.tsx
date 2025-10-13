@@ -16,7 +16,7 @@ export function AdminTransactionsPage() {
   const [items, setItems] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [stats, setStats] = useState<any>(null)
+  const [stats, setStats] = useState<{ totalTransactions: number; totalCreditsUsed: string; totalCreditsPurchased: number; totalCreditsConsumed: number; totalRevenue: number } | null>(null)
   const [filters, setFilters] = useState({
     type: '',
     userId: ''
@@ -34,11 +34,12 @@ export function AdminTransactionsPage() {
       if (filters.type) params.append('type', filters.type)
       if (filters.userId) params.append('userId', filters.userId)
       
-      const res = await apiFetch<{ success: boolean; data: any }>(`/api/transactions?${params.toString()}`)
-      const data = (res as any).data?.transactions || (res as any).data || []
+      const res = await apiFetch<{ success: boolean; data: { transactions: Transaction[] } }>(`/api/transactions?${params.toString()}`)
+      const data = res.data?.transactions || []
       setItems(data)
-    } catch (err: any) {
-      setError(err.message || 'Load failed')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Load failed')
     } finally {
       setLoading(false)
     }
@@ -46,9 +47,9 @@ export function AdminTransactionsPage() {
 
   async function loadStats() {
     try {
-      const res = await apiFetch<{ success: boolean; data: any }>('/api/transactions/stats')
+      const res = await apiFetch<{ success: boolean; data: typeof stats }>('/api/transactions/stats')
       setStats(res.data)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Load stats failed:', err)
     }
   }
