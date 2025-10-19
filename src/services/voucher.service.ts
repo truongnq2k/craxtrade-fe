@@ -1,6 +1,8 @@
 import { apiFetch, ApiPaths } from '../utils/api'
 import type { Voucher, CreateVoucherRequest, UseVoucherRequest } from '../types'
 
+export type { Voucher }
+
 export const voucherService = {
   async getAllVouchers(): Promise<Voucher[]> {
     return apiFetch<Voucher[]>(ApiPaths.vouchers)

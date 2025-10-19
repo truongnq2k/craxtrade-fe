@@ -1,6 +1,6 @@
 import { useAuthStore } from '../store/auth'
 
-const BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:9999'
+const BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:9999'
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
 
@@ -44,6 +44,7 @@ export const ApiPaths = {
   // Users
   users: '/api/users',
   userById: (id: string) => `/api/users/${id}`,
+  userProfile: '/api/users/profile',
   userByEmail: (email: string) => `/api/users/email/${email}`,
   userToggle: (id: string) => `/api/users/${id}/toggle`,
   userPassword: (id: string) => `/api/users/${id}/password`,
@@ -130,6 +131,3 @@ export const ApiPaths = {
   creditPackageById: (id: string) => `/api/credit-packages/${id}`,
   activeCreditPackages: '/api/credit-packages/active',
 }
-
-
-

@@ -1,6 +1,8 @@
 import { apiFetch, ApiPaths } from '../utils/api'
 import type { Signal, CreateSignalRequest, SignalStats, SignalWithTrades, SignalSummary } from '../types'
 
+export type { Signal }
+
 export const signalService = {
   async getAllSignals(): Promise<Signal[]> {
     return apiFetch<Signal[]>(ApiPaths.signals)
@@ -56,5 +58,19 @@ export const signalService = {
 
   async getUserSignalSummary(userId: string): Promise<SignalSummary> {
     return apiFetch<SignalSummary>(ApiPaths.userSignalSummary(userId))
+  },
+
+  async createAISignal(symbol: string, timeframe: string): Promise<Signal> {
+    return apiFetch<Signal>('/api/signals/ai/create', {
+      method: 'POST',
+      body: { symbol, timeframe }
+    })
+  },
+
+  async createBatchAISignals(symbols: string[], timeframe: string): Promise<Signal[]> {
+    return apiFetch<Signal[]>('/api/signals/ai/batch', {
+      method: 'POST',
+      body: { symbols, timeframe }
+    })
   }
 }

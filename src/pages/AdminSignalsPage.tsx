@@ -6,11 +6,12 @@ type Signal = {
   id: string
   symbol: string
   type: string
-  direction: string
+  direction?: string
   entryPrice?: number
   targetPrice?: number
   stopLoss?: number
   confidence: number
+  reasoning?: string
   isActive: boolean
   userId: string
   createdAt: string
@@ -144,6 +145,7 @@ export function AdminSignalsPage() {
                 <th className="px-3 py-2">Target</th>
                 <th className="px-3 py-2">Stop Loss</th>
                 <th className="px-3 py-2">Confidence</th>
+                <th className="px-3 py-2">Reasoning</th>
                 <th className="px-3 py-2">Trạng thái</th>
                 <th className="px-3 py-2">User ID</th>
                 <th className="px-3 py-2">Ngày tạo</th>
@@ -179,6 +181,14 @@ export function AdminSignalsPage() {
                         ></div>
                       </div>
                       <span className="text-xs">{signal.confidence}%</span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2 max-w-xs">
+                    <div className="text-xs text-gray-600">
+                      {signal.reasoning && signal.reasoning.length > 50 
+                        ? `${signal.reasoning.substring(0, 50)}...`
+                        : signal.reasoning || 'No reasoning'
+                      }
                     </div>
                   </td>
                   <td className="px-3 py-2">

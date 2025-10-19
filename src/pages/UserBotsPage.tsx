@@ -1,35 +1,78 @@
 import { useEffect, useState } from 'react'
-import { DashboardLayout } from '../components/DashboardLayout'
-import { apiFetch } from '../utils/api'
+import { useNavigate } from 'react-router-dom'
+import { apiFetch, ApiPaths } from '../utils/api'
 import { useAuthStore } from '../store/auth'
+import { botService } from '../services/bot.service'
 
-type BotInstance = {
+interface BotInstance {
   id: string
+  userId: string
   name: string
   botType: string
   symbol: string
   status: string
   capital: number
   leverage: number
+  allocationPct: number
+  riskPerTrade: number
+  maxDrawdownPct: number
+  marginMode: string
+  isHedgeMode: boolean
+  isActive: boolean
+  exchangeAccountId: string
+  createdAt: string
+  updatedAt: string
+  startedAt: string | null
+  stoppedAt: string | null
+  config: Record<string, unknown>
+  metadata: Record<string, unknown>
 }
 
 export function UserBotsPage() {
   const { user } = useAuthStore()
-  const [items, setItems] = useState<BotInstance[]>([])
+  const navigate = useNavigate()
+  const [bots, setBots] = useState<BotInstance[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [matrixRain, setMatrixRain] = useState<Array<{ x: number; y: number; speed: number }>>([])
+
+  // Matrix rain effect
+  useEffect(() => {
+    const columns = Math.floor(window.innerWidth / 20)
+    const drops = Array(columns).fill(0).map(() => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight - window.innerHeight,
+      speed: Math.random() * 2 + 1
+    }))
+    setMatrixRain(drops)
+
+    const animateRain = () => {
+      setMatrixRain(prev => prev.map(drop => ({
+        ...drop,
+        y: drop.y > window.innerHeight ? 0 : drop.y + drop.speed
+      })))
+    }
+
+    const interval = setInterval(animateRain, 50)
+    return () => clearInterval(interval)
+  }, [])
 
   useEffect(() => {
     async function load() {
       try {
-        if (!user?.sub) {
+        if (!user?.sub && !user?.userId) {
           setError('Thiếu userId trong token')
           return
         }
-        const userId = user?.sub
-        const res = await apiFetch<{ success: boolean; data: { bots: BotInstance[] } }>(`/api/users/${userId}/bot-instances`)
-        const data = res.data?.bots || []
-        setItems(data)
+        const userId = user?.sub || user?.userId
+        if (!userId) {
+          setError('Thiếu userId trong token')
+          return
+        }
+        
+        // Use direct API call since service doesn't have getUserBots method
+        const res = await apiFetch<{ success: boolean; data: BotInstance[] }>(ApiPaths.userBots(userId))
+        setBots(res.data || [])
       } catch (err: unknown) {
         const error = err as { message?: string }
         setError(error.message || 'Load failed')
@@ -42,101 +85,261 @@ export function UserBotsPage() {
 
   async function handleBotAction(botId: string, action: 'start' | 'stop' | 'pause' | 'resume') {
     try {
-      await apiFetch(`/api/bot-instances/${botId}/${action}`, { method: 'POST' })
-      // Reload data
-      window.location.reload()
+      switch (action) {
+        case 'start':
+          await botService.startBot(botId)
+          break
+        case 'stop':
+          await botService.stopBot(botId)
+          break
+        case 'pause':
+          await botService.pauseBot(botId)
+          break
+        case 'resume':
+          await botService.resumeBot(botId)
+          break
+      }
+
+      // Reload the bots data after action
+      const userId = user?.sub || user?.userId
+      if (userId) {
+        const res = await apiFetch<{ success: boolean; data: BotInstance[] }>(ApiPaths.userBots(userId))
+        setBots(res.data || [])
+      }
     } catch (err: unknown) {
       const error = err as { message?: string }
       setError(error.message || 'Action failed')
     }
   }
 
+  function getBotStatusColor(status: string) {
+    switch (status) {
+      case 'RUNNING':
+        return 'text-green-400 bg-green-500/20'
+      case 'PAUSED':
+        return 'text-yellow-400 bg-yellow-500/20'
+      case 'STOPPED':
+        return 'text-red-400 bg-red-500/20'
+      default:
+        return 'text-gray-400 bg-gray-500/20'
+    }
+  }
+
+  function getBotStatusText(status: string) {
+    switch (status) {
+      case 'RUNNING':
+        return '[ACTIVE]'
+      case 'PAUSED':
+        return '[PAUSED]'
+      case 'STOPPED':
+        return '[STOPPED]'
+      default:
+        return '[UNKNOWN]'
+    }
+  }
+
   return (
-    <DashboardLayout>
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-semibold">Bot Trading của tôi</h1>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-          Tạo Bot mới
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-black text-green-400 font-mono tracking-wider" style={{ textShadow: '0 0 10px #00ff00' }}>
+            [TRADING_BOTS]
+          </h1>
+          <p className="text-green-600 text-sm font-mono mt-1">
+            $ ./manage_trading_bots.sh
+          </p>
+        </div>
+        <button
+          onClick={() => navigate('/dashboard/create-bot')}
+          className="px-4 py-2 bg-green-500 text-black font-mono font-bold rounded hover:bg-green-400 transition-all duration-300"
+        >
+          [CREATE_QUANTUM_BOT]
         </button>
       </div>
-      
-      {loading && <div>Đang tải...</div>}
-      {error && <div className="text-red-600 mb-4">{error}</div>}
-      
-      {!loading && !error && (
-        <div className="overflow-x-auto border rounded">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-100 text-left">
-              <tr>
-                <th className="px-3 py-2">Tên Bot</th>
-                <th className="px-3 py-2">Loại</th>
-                <th className="px-3 py-2">Symbol</th>
-                <th className="px-3 py-2">Vốn</th>
-                <th className="px-3 py-2">Leverage</th>
-                <th className="px-3 py-2">Trạng thái</th>
-                <th className="px-3 py-2">Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((bot) => (
-                <tr key={bot.id} className="border-t">
-                  <td className="px-3 py-2">{bot.name}</td>
-                  <td className="px-3 py-2">{bot.botType}</td>
-                  <td className="px-3 py-2">{bot.symbol}</td>
-                  <td className="px-3 py-2">{bot.capital}</td>
-                  <td className="px-3 py-2">{bot.leverage}x</td>
-                  <td className="px-3 py-2">
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      bot.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                      bot.status === 'PAUSED' ? 'bg-yellow-100 text-yellow-800' :
-                      bot.status === 'STOPPED' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {bot.status}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="flex gap-1">
-                      {bot.status === 'STOPPED' && (
-                        <button 
-                          onClick={() => handleBotAction(bot.id, 'start')}
-                          className="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700"
-                        >
-                          Start
-                        </button>
-                      )}
-                      {bot.status === 'ACTIVE' && (
-                        <>
-                          <button 
-                            onClick={() => handleBotAction(bot.id, 'pause')}
-                            className="bg-yellow-600 text-white px-2 py-1 rounded text-xs hover:bg-yellow-700"
-                          >
-                            Pause
-                          </button>
-                          <button 
-                            onClick={() => handleBotAction(bot.id, 'stop')}
-                            className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700"
-                          >
-                            Stop
-                          </button>
-                        </>
-                      )}
-                      {bot.status === 'PAUSED' && (
-                        <button 
-                          onClick={() => handleBotAction(bot.id, 'resume')}
-                          className="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700"
-                        >
-                          Resume
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+      {/* Error Display */}
+      {error && (
+        <div className="text-red-400 text-sm font-mono bg-red-500/10 border border-red-500/30 rounded px-4 py-3">
+          <span className="text-red-500">$</span> ERROR: {error}
         </div>
       )}
-    </DashboardLayout>
+
+      {/* Matrix Rain Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
+        {matrixRain.map((drop, i) => (
+          <div
+            key={i}
+            className="absolute text-green-500 text-xs font-mono opacity-70"
+            style={{
+              left: `${drop.x}px`,
+              top: `${drop.y}px`,
+              transform: `translateY(${drop.y}px)`
+            }}
+          >
+            {String.fromCharCode(0x30A0 + Math.random() * 96)}
+          </div>
+        ))}
+      </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+          from { 
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+      `}</style>
+
+      {/* Loading State */}
+      {loading && (
+        <div className="text-center py-8">
+          <div className="text-green-400 font-mono animate-pulse">
+            $ ./loading_trading_bots.sh
+          </div>
+          <div className="text-green-600 text-sm mt-2">
+            SYSTEM: PROCESSING...
+          </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && !error && bots.length === 0 && (
+        <div className="text-center py-12 bg-black/50 border border-green-500/30 rounded-lg">
+          <div className="text-green-400 text-lg font-mono mb-2">
+            No trading bots found
+          </div>
+          <div className="text-green-600 text-sm">
+            $ ./init_first_trading_bot.sh
+          </div>
+          <button
+            onClick={() => navigate('/dashboard/create-bot')}
+            className="mt-4 px-4 py-2 bg-green-500 text-black font-mono rounded hover:bg-green-400 transition-all duration-300"
+          >
+            [INITIATE_QUANTUM_BOT]
+          </button>
+        </div>
+      )}
+
+      {/* Bots Table */}
+      {!loading && !error && bots.length > 0 && (
+        <div className="bg-black/50 border border-green-500/30 rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-black/80 border-b border-green-500/50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-green-400 font-mono text-xs uppercase tracking-wider">BOT_NAME</th>
+                  <th className="px-4 py-3 text-left text-green-400 font-mono text-xs uppercase tracking-wider">TYPE</th>
+                  <th className="px-4 py-3 text-left text-green-400 font-mono text-xs uppercase tracking-wider">SYMBOL</th>
+                  <th className="px-4 py-3 text-left text-green-400 font-mono text-xs uppercase tracking-wider">CAPITAL</th>
+                  <th className="px-4 py-3 text-left text-green-400 font-mono text-xs uppercase tracking-wider">LEVERAGE</th>
+                  <th className="px-4 py-3 text-left text-green-400 font-mono text-xs uppercase tracking-wider">STATUS</th>
+                  <th className="px-4 py-3 text-left text-green-400 font-mono text-xs uppercase tracking-wider">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-green-500/20">
+                {bots.map((bot) => (
+                  <tr key={bot.id} className="hover:bg-green-500/5 transition-colors">
+                    <td className="px-4 py-3">
+                      <span className="text-green-300 font-mono text-xs bg-black/50 px-2 py-1 rounded">
+                        {bot.name?.substring(0, 12) || 'N/A'}...
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-green-400 font-mono text-xs bg-green-500/10 px-2 py-1 rounded">
+                        {bot.botType}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-green-300 font-mono text-xs bg-black/50 px-2 py-1 rounded">
+                        {bot.symbol}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-green-300 font-mono text-xs">
+                        ${bot.capital?.toLocaleString() || '0'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-green-300 font-mono text-xs">
+                        {bot.leverage}x
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs font-mono px-2 py-1 rounded ${getBotStatusColor(bot.status)}`}>
+                        {getBotStatusText(bot.status)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex space-x-2">
+                        {bot.status === 'STOPPED' && (
+                          <button
+                            onClick={() => handleBotAction(bot.id, 'start')}
+                            className="px-2 py-1 bg-green-500/20 border border-green-500/50 text-green-400 font-mono text-xs hover:bg-green-500/30 transition-all duration-300"
+                          >
+                            [START]
+                          </button>
+                        )}
+                        {bot.status === 'RUNNING' && (
+                          <>
+                            <button
+                              onClick={() => handleBotAction(bot.id, 'pause')}
+                              className="px-2 py-1 bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 font-mono text-xs hover:bg-yellow-500/30 transition-all duration-300"
+                            >
+                              [PAUSE]
+                            </button>
+                            <button
+                              onClick={() => handleBotAction(bot.id, 'stop')}
+                              className="px-2 py-1 bg-red-500/20 border border-red-500/50 text-red-400 font-mono text-xs hover:bg-red-500/30 transition-all duration-300"
+                            >
+                              [STOP]
+                            </button>
+                          </>
+                        )}
+                        {bot.status === 'PAUSED' && (
+                          <button
+                            onClick={() => handleBotAction(bot.id, 'resume')}
+                            className="px-2 py-1 bg-blue-500/20 border border-blue-500/50 text-blue-400 font-mono text-xs hover:bg-blue-500/30 transition-all duration-300"
+                          >
+                            [RESUME]
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* System Status */}
+      {!loading && !error && (
+        <div className="bg-black/50 border border-green-500/30 rounded-lg p-4">
+          <div className="flex justify-between items-center text-xs font-mono text-green-600">
+            <div className="flex items-center space-x-4">
+              <span className="animate-pulse">SYSTEM: OPERATIONAL</span>
+              <span>•</span>
+              <span>BOTS: {bots.length}</span>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span>QUANTUM: ONLINE</span>
+              <span>•</span>
+              <span>STATUS: SECURE</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

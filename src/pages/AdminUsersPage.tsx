@@ -45,13 +45,13 @@ export function AdminUsersPage() {
       if (filters.role) params.append('role', filters.role)
       if (filters.isActive) params.append('isActive', filters.isActive)
       
-      const res = await apiFetch<{ success: boolean; data: any }>(`/api/users?${params.toString()}`)
-      const data = res.data
-      setItems(data.users || [])
+      const res = await apiFetch<{ success: boolean; data: unknown }>(`/api/users?${params.toString()}`)
+      const result = res.data as { users: User[], pagination: { total: number; pages: number } }
+      setItems(result.users || [])
       setPagination(prev => ({
         ...prev,
-        total: data.pagination?.total || 0,
-        pages: data.pagination?.pages || 0
+        total: result.pagination?.total || 0,
+        pages: result.pagination?.pages || 0
       }))
     } catch (err: unknown) {
       const error = err as { message?: string }

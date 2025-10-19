@@ -15,6 +15,12 @@ export type PaginatedResult<T> = {
   }
 }
 
+// Standard API Response wrapper
+export interface ApiResponse<T> {
+  success: boolean
+  data: T
+}
+
 // User Types
 export interface User {
   id: string
@@ -26,6 +32,17 @@ export interface User {
   creditsExpiresAt?: string
   lastLoginAt?: string
   role: 'ADMIN' | 'USER'
+  createdAt: string
+  updatedAt: string
+}
+
+export interface UserProfile {
+  id: string
+  email: string
+  name: string
+  role: 'USER' | 'ADMIN'
+  isActive: boolean
+  credits: string
   createdAt: string
   updatedAt: string
 }
@@ -55,6 +72,11 @@ export interface LoginResponse {
   }
 }
 
+export interface LoginApiResponse {
+  success: boolean
+  data: LoginResponse
+}
+
 export interface RegisterResponse {
   user: {
     id: string
@@ -62,6 +84,10 @@ export interface RegisterResponse {
     name: string
     role: 'ADMIN' | 'USER'
     isActive: boolean
+  }
+  tokens: {
+    accessToken: string
+    refreshToken: string
   }
 }
 
