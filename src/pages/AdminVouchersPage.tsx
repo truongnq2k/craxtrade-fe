@@ -1,13 +1,6 @@
 import { useEffect, useState } from 'react'
-import { DashboardLayout } from '../components/DashboardLayout'
 import { apiFetch } from '../utils/api'
 import { voucherService, type Voucher } from '../services/voucher.service'
-
-interface MatrixDrop {
-  x: number
-  y: number
-  speed: number
-}
 
 export function AdminVouchersPage() {
   const [items, setItems] = useState<Voucher[]>([])
@@ -16,7 +9,6 @@ export function AdminVouchersPage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [editingItem, setEditingItem] = useState<Voucher | null>(null)
-  const [matrixRain, setMatrixRain] = useState<MatrixDrop[]>([])
   const [formData, setFormData] = useState({
     code: '',
     name: '',
@@ -24,27 +16,6 @@ export function AdminVouchersPage() {
     description: '',
     isActive: true
   })
-
-  // Matrix rain effect
-  useEffect(() => {
-    const columns = Math.floor(window.innerWidth / 30)
-    const drops = Array(columns).fill(0).map(() => ({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight - window.innerHeight,
-      speed: Math.random() * 1.5 + 0.5
-    }))
-    setMatrixRain(drops)
-
-    const animateRain = () => {
-      setMatrixRain(prev => prev.map(drop => ({
-        ...drop,
-        y: drop.y > window.innerHeight ? 0 : drop.y + drop.speed
-      })))
-    }
-
-    const interval = setInterval(animateRain, 100)
-    return () => clearInterval(interval)
-  }, [])
 
   useEffect(() => {
     loadVouchers()
@@ -164,7 +135,7 @@ export function AdminVouchersPage() {
   }
 
   return (
-    <DashboardLayout>
+    <div>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
@@ -173,7 +144,7 @@ export function AdminVouchersPage() {
               [VOUCHER_ADMIN_PANEL]
             </h1>
             <p className="text-green-600 text-sm font-mono mt-1">
-              $ ./manage_quantum_vouchers.sh
+              Voucher Management
             </p>
           </div>
           <div className="flex space-x-3">
@@ -205,23 +176,7 @@ export function AdminVouchersPage() {
           </div>
         )}
 
-        {/* Matrix Rain Background */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
-          {matrixRain.map((drop, i) => (
-            <div
-              key={i}
-              className="absolute text-green-500 text-xs font-mono opacity-50"
-              style={{
-                left: `${drop.x}px`,
-                top: `${drop.y}px`,
-                transform: `translateY(${drop.y}px)`
-              }}
-            >
-              {String.fromCharCode(0x30A0 + Math.random() * 96)}
-            </div>
-          ))}
-        </div>
-
+        
         {/* Form */}
         {showForm && (
           <div className="bg-black/90 border border-green-500/50 rounded-lg p-6">
@@ -314,11 +269,11 @@ export function AdminVouchersPage() {
         {/* Loading */}
         {loading && (
           <div className="text-center py-8 text-green-600">
-            <div className="text-sm font-mono animate-pulse">
-              $ ./loading_vouchers.sh
+            <div className="text-sm font-mono">
+              Loading...
             </div>
             <div className="text-xs mt-2">
-              Retrieving voucher data from quantum database...
+              Please wait while we load the data
             </div>
           </div>
         )}
@@ -326,8 +281,8 @@ export function AdminVouchersPage() {
         {/* Vouchers Table */}
         {!loading && (
           <div className="bg-black/90 border border-green-500/30 rounded-lg p-6">
-            <div className="text-green-600 text-xs font-mono mb-4 animate-pulse">
-              $ ./display_voucher_database.sh
+            <div className="text-green-600 text-xs font-mono mb-4">
+              Voucher Database
             </div>
             
             <div className="overflow-x-auto">
@@ -410,25 +365,16 @@ export function AdminVouchersPage() {
               <div className="text-center py-12 text-green-600">
                 <div className="text-8xl mb-4">🎫</div>
                 <div className="text-sm font-mono mb-2">
-                  $ ./no_vouchers_found.sh
+                  No vouchers found
                 </div>
                 <div className="text-xs mt-2">
-                  No vouchers found
+                  No vouchers found in the system
                 </div>
               </div>
             )}
-
-            {/* Terminal Info */}
-            <div className="mt-6 text-center">
-              <div className="text-xs font-mono text-green-600">
-                <div className="animate-pulse">DATABASE: CONNECTED</div>
-                <div className="mt-1">ENCRYPTION: QUANTUM</div>
-                <div className="mt-1">TOTAL_VOUCHERS: {items.length}</div>
-              </div>
-            </div>
           </div>
         )}
       </div>
-    </DashboardLayout>
+    </div>
   )
 }

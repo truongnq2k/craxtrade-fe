@@ -1,13 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
 import { voucherService } from '../services/voucher.service'
-
-interface MatrixDrop {
-  x: number
-  y: number
-  speed: number
-}
 
 export function UserVouchersPage() {
   const navigate = useNavigate()
@@ -16,29 +10,7 @@ export function UserVouchersPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [matrixRain, setMatrixRain] = useState<MatrixDrop[]>([])
-
-  // Matrix rain effect
-  useEffect(() => {
-    const columns = Math.floor(window.innerWidth / 20)
-    const drops = Array(columns).fill(0).map(() => ({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight - window.innerHeight,
-      speed: Math.random() * 2 + 1
-    }))
-    setMatrixRain(drops)
-
-    const animateRain = () => {
-      setMatrixRain(prev => prev.map(drop => ({
-        ...drop,
-        y: drop.y > window.innerHeight ? 0 : drop.y + drop.speed
-      })))
-    }
-
-    const interval = setInterval(animateRain, 50)
-    return () => clearInterval(interval)
-  }, [])
-
+  
 
   async function handleUseVoucher() {
     if (!voucherCode.trim()) {
@@ -82,7 +54,7 @@ export function UserVouchersPage() {
             [VOUCHER_SYSTEM]
           </h1>
           <p className="text-green-600 text-sm font-mono mt-1">
-            $ ./activate_quantum_vouchers.sh
+            Voucher Activation
           </p>
         </div>
         <button
@@ -107,30 +79,7 @@ export function UserVouchersPage() {
         </div>
       )}
 
-      {/* Matrix Rain Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-        {matrixRain.map((drop, i) => (
-          <div
-            key={i}
-            className="absolute text-green-500 text-xs font-mono opacity-70"
-            style={{
-              left: `${drop.x}px`,
-              top: `${drop.y}px`,
-              transform: `translateY(${drop.y}px)`
-            }}
-          >
-            {String.fromCharCode(0x30A0 + Math.random() * 96)}
-          </div>
-        ))}
-      </div>
-
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      `}</style>
-
+      
       {/* User Vouchers List */}
 
 
@@ -141,7 +90,7 @@ export function UserVouchersPage() {
           [ACTIVATE_VOUCHER]
         </h3>
         <p className="text-green-600 text-xs font-mono mb-4">
-          $ ./activate_quantum_voucher.sh
+          Activate a voucher
         </p>
 
         <form onSubmit={handleUseVoucher} className="space-y-4">
@@ -167,15 +116,7 @@ export function UserVouchersPage() {
         </form>
       </div>
 
-      {/* Terminal Info */}
-      <div className="mt-6 text-center">
-        <div className="text-xs font-mono text-green-600">
-          <div className="animate-pulse">SYSTEM: ONLINE</div>
-          <div className="mt-1">ENCRYPTION: QUANTUM</div>
-          <div className="mt-1">STATUS: SECURE</div>
-        </div>
-      </div>
-
+  
     </div>
   )
 

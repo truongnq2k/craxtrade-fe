@@ -34,29 +34,7 @@ export function UserBotsPage() {
   const [bots, setBots] = useState<BotInstance[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [matrixRain, setMatrixRain] = useState<Array<{ x: number; y: number; speed: number }>>([])
-
-  // Matrix rain effect
-  useEffect(() => {
-    const columns = Math.floor(window.innerWidth / 20)
-    const drops = Array(columns).fill(0).map(() => ({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight - window.innerHeight,
-      speed: Math.random() * 2 + 1
-    }))
-    setMatrixRain(drops)
-
-    const animateRain = () => {
-      setMatrixRain(prev => prev.map(drop => ({
-        ...drop,
-        y: drop.y > window.innerHeight ? 0 : drop.y + drop.speed
-      })))
-    }
-
-    const interval = setInterval(animateRain, 50)
-    return () => clearInterval(interval)
-  }, [])
-
+  
   useEffect(() => {
     async function load() {
       try {
@@ -147,7 +125,7 @@ export function UserBotsPage() {
             [TRADING_BOTS]
           </h1>
           <p className="text-green-600 text-sm font-mono mt-1">
-            $ ./manage_trading_bots.sh
+            Trading Bot Management
           </p>
         </div>
         <button
@@ -165,49 +143,15 @@ export function UserBotsPage() {
         </div>
       )}
 
-      {/* Matrix Rain Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-        {matrixRain.map((drop, i) => (
-          <div
-            key={i}
-            className="absolute text-green-500 text-xs font-mono opacity-70"
-            style={{
-              left: `${drop.x}px`,
-              top: `${drop.y}px`,
-              transform: `translateY(${drop.y}px)`
-            }}
-          >
-            {String.fromCharCode(0x30A0 + Math.random() * 96)}
-          </div>
-        ))}
-      </div>
-
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        @keyframes slideUp {
-          from { 
-            opacity: 0;
-            transform: translateY(20px) scale(0.95);
-          }
-          to { 
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-      `}</style>
-
+      
       {/* Loading State */}
       {loading && (
         <div className="text-center py-8">
-          <div className="text-green-400 font-mono animate-pulse">
-            $ ./loading_trading_bots.sh
+          <div className="text-green-400 font-mono">
+            Loading...
           </div>
           <div className="text-green-600 text-sm mt-2">
-            SYSTEM: PROCESSING...
+            Please wait while we load the data
           </div>
         </div>
       )}
@@ -219,7 +163,7 @@ export function UserBotsPage() {
             No trading bots found
           </div>
           <div className="text-green-600 text-sm">
-            $ ./init_first_trading_bot.sh
+            Create your first trading bot
           </div>
           <button
             onClick={() => navigate('/dashboard/create-bot')}
@@ -328,7 +272,7 @@ export function UserBotsPage() {
         <div className="bg-black/50 border border-green-500/30 rounded-lg p-4">
           <div className="flex justify-between items-center text-xs font-mono text-green-600">
             <div className="flex items-center space-x-4">
-              <span className="animate-pulse">SYSTEM: OPERATIONAL</span>
+              <span>SYSTEM: OPERATIONAL</span>
               <span>•</span>
               <span>BOTS: {bots.length}</span>
             </div>

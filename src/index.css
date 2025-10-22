@@ -6,3 +6,30 @@
     height: 100%;
   }
 }
+
+/* Terminal-style scrollbar */
+@layer utilities {
+  .terminal-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #10b981 #000000;
+  }
+
+  .terminal-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .terminal-scrollbar::-webkit-scrollbar-track {
+    background: #000000;
+    border: 1px solid #10b98133;
+  }
+
+  .terminal-scrollbar::-webkit-scrollbar-thumb {
+    background: #10b981;
+    border: 1px solid #000000;
+    border-radius: 2px;
+  }
+
+  .terminal-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #34d399;
+  }
+}

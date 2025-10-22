@@ -3,43 +3,15 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
 import { transactionService, type Transaction } from '../services/transaction.service'
 
-interface MatrixDrop {
-  x: number
-  y: number
-  speed: number
-}
-
 export function UserTransactionsPage() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [matrixRain, setMatrixRain] = useState<MatrixDrop[]>([])
   const [filterType, setFilterType] = useState<string>('')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(10)
-
-  // Matrix rain effect
-  useEffect(() => {
-    const columns = Math.floor(window.innerWidth / 25)
-    const drops = Array(columns).fill(0).map(() => ({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight - window.innerHeight,
-      speed: Math.random() * 1.8 + 0.7
-    }))
-    setMatrixRain(drops)
-
-    const animateRain = () => {
-      setMatrixRain(prev => prev.map(drop => ({
-        ...drop,
-        y: drop.y > window.innerHeight ? 0 : drop.y + drop.speed
-      })))
-    }
-
-    const interval = setInterval(animateRain, 80)
-    return () => clearInterval(interval)
-  }, [])
 
   useEffect(() => {
     loadTransactions()
@@ -128,7 +100,7 @@ export function UserTransactionsPage() {
             [TRANSACTION_LOG]
           </h1>
           <p className="text-green-600 text-sm font-mono mt-1">
-            $ ./view_transaction_history.sh
+            Transaction History
           </p>
         </div>
         <button
@@ -146,44 +118,11 @@ export function UserTransactionsPage() {
         </div>
       )}
 
-      {/* Matrix Rain Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-        {matrixRain.map((drop, i) => (
-          <div
-            key={i}
-            className="absolute text-green-500 text-xs font-mono opacity-50"
-            style={{
-              left: `${drop.x}px`,
-              top: `${drop.y}px`,
-              transform: `translateY(${drop.y}px)`
-            }}
-          >
-            {String.fromCharCode(0x30A0 + Math.random() * 96)}
-          </div>
-        ))}
-      </div>
-
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slideUp {
-          from { 
-            opacity: 0;
-            transform: translateY(20px) scale(0.95);
-          }
-          to { 
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-      `}</style>
-
+      
       {/* Transaction List */}
       <div className="bg-black/90 border border-green-500/30 rounded-lg p-6">
-        <div className="text-green-600 text-xs font-mono mb-6 animate-pulse">
-          $ ./load_transaction_database.sh
+        <div className="text-green-600 text-xs font-mono mb-6">
+          Transaction Database
         </div>
 
         {/* Filters */}
@@ -208,11 +147,11 @@ export function UserTransactionsPage() {
         {/* Loading State */}
         {loading && (
           <div className="text-center py-8 text-green-600">
-            <div className="text-sm font-mono animate-pulse">
-              $ ./loading_transactions.sh
+            <div className="text-sm font-mono">
+              Loading...
             </div>
             <div className="text-xs mt-2">
-              Retrieving transaction data from quantum database...
+              Please wait while we load the data
             </div>
           </div>
         )}
@@ -231,7 +170,7 @@ export function UserTransactionsPage() {
               </div>
             </div>
             <div className="text-sm font-mono mb-2">
-              $ ./no_transactions_found.sh
+              No transactions found
             </div>
             <div className="text-xs mt-2">
               No transactions found for the selected criteria
@@ -295,7 +234,7 @@ export function UserTransactionsPage() {
             {/* Pagination */}
             <div className="flex justify-between items-center mt-6 pt-4 border-t border-green-500/30">
               <div className="text-green-600 text-xs font-mono">
-                <div className="animate-pulse">Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, transactions.length)}</div>
+                <div>Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, transactions.length)}</div>
                 <div className="mt-1">Total: {transactions.length} transactions</div>
               </div>
               <div className="flex space-x-2">
@@ -323,15 +262,7 @@ export function UserTransactionsPage() {
           </>
         )}
 
-        {/* Terminal Info */}
-        <div className="mt-6 text-center">
-          <div className="text-xs font-mono text-green-600">
-            <div className="animate-pulse">DATABASE: CONNECTED</div>
-            <div className="mt-1">ENCRYPTION: QUANTUM</div>
-            <div className="mt-1">STATUS: SECURE</div>
-          </div>
         </div>
-      </div>
     </div>
   )
 }

@@ -10,10 +10,6 @@ import { UserDashboardPage } from './pages/UserDashboardPage'
 import { UserExchangeAccountsPage } from './pages/UserExchangeAccountsPage'
 import { UserBotsPage } from './pages/UserBotsPage'
 import { UserSignalsPage } from './pages/UserSignalsPage'
-import { UserTradesPage } from './pages/UserTradesPage'
-import { UserTransactionsPage } from './pages/UserTransactionsPage'
-import { UserVouchersPage } from './pages/UserVouchersPage'
-import { UserNewsPage } from './pages/UserNewsPage'
 import { CreateBotPage } from './pages/CreateBotPage'
 import { AdminDashboardPage } from './pages/AdminDashboardPage'
 import { AdminUsersPage } from './pages/AdminUsersPage'
@@ -23,7 +19,6 @@ import { AdminSignalsPage } from './pages/AdminSignalsPage'
 import { AdminTradesPage } from './pages/AdminTradesPage'
 import { AdminTransactionsPage } from './pages/AdminTransactionsPage'
 import { AdminVouchersPage } from './pages/AdminVouchersPage'
-import { AdminNewsPage } from './pages/AdminNewsPage'
 import { AdminCreditPackagesPage } from './pages/AdminCreditPackagesPage'
 
 function AppContent() {
@@ -61,22 +56,6 @@ const router = createBrowserRouter([
       {
         path: 'signals',
         element: <UserSignalsPage />
-      },
-      {
-        path: 'trades',
-        element: <UserTradesPage />
-      },
-      {
-        path: 'transactions',
-        element: <UserTransactionsPage />
-      },
-      {
-        path: 'vouchers',
-        element: <UserVouchersPage />
-      },
-      {
-        path: 'news',
-        element: <UserNewsPage />
       },
       {
         path: 'create-bot',
@@ -122,11 +101,7 @@ const router = createBrowserRouter([
         path: 'vouchers',
         element: <AdminVouchersPage />
       },
-      {
-        path: 'news',
-        element: <AdminNewsPage />
-      },
-      {
+    {
         path: 'credit-packages',
         element: <AdminCreditPackagesPage />
       },

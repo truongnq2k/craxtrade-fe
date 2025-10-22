@@ -42,7 +42,10 @@ export interface UserProfile {
   name: string
   role: 'USER' | 'ADMIN'
   isActive: boolean
-  credits: string
+  credits: number
+  creditsPackage: number
+  creditsExpiresAt?: string
+  lastLoginAt?: string
   createdAt: string
   updatedAt: string
 }
@@ -370,26 +373,97 @@ export interface CreateCreditPackageRequest {
   durationDays?: number
 }
 
-// News Types
+// Enhanced News Types
 export interface News {
   id: string
   title: string
+  originalUrl?: string
   summary: string
+  aiSummary?: string
   source: string
+  category?: string
+  author?: string
+  publishedAt: string
+  crawlTimestamp: string
+  contentHash: string
+  marketImpact: number // -100 to 100
+  sentiment?: 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL'
+  keywords?: string[]
+  relatedSymbols?: string[]
+  aiAnalysis?: {
+    relevanceScore: number
+    marketFactors: string[]
+    riskLevel: 'LOW' | 'MEDIUM' | 'HIGH'
+    timeHorizon: 'SHORT_TERM' | 'MEDIUM_TERM' | 'LONG_TERM'
+  }
+  isActive: boolean
   createdAt: string
+  updatedAt: string
 }
 
 export interface CreateNewsRequest {
   title: string
+  originalUrl?: string
   summary: string
+  aiSummary?: string
   source: string
+  category?: string
+  author?: string
+  publishedAt: string
+  marketImpact?: number
+  sentiment?: 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL'
+  keywords?: string[]
+  relatedSymbols?: string[]
+  aiAnalysis?: {
+    relevanceScore: number
+    marketFactors: string[]
+    riskLevel: 'LOW' | 'MEDIUM' | 'HIGH'
+    timeHorizon: 'SHORT_TERM' | 'MEDIUM_TERM' | 'LONG_TERM'
+  }
+}
+
+export interface UpdateNewsRequest {
+  title?: string
+  summary?: string
+  aiSummary?: string
+  category?: string
+  marketImpact?: number
+  sentiment?: 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL'
+  keywords?: string[]
+  relatedSymbols?: string[]
+  aiAnalysis?: {
+    relevanceScore: number
+    marketFactors: string[]
+    riskLevel: 'LOW' | 'MEDIUM' | 'HIGH'
+    timeHorizon: 'SHORT_TERM' | 'MEDIUM_TERM' | 'LONG_TERM'
+  }
+  isActive?: boolean
+}
+
+export interface NewsListQuery {
+  page?: number
+  limit?: number
+  search?: string
+  source?: string
+  category?: string
+  sentiment?: 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL'
+  minMarketImpact?: number
+  maxMarketImpact?: number
+  symbol?: string
+  startDate?: string
+  endDate?: string
 }
 
 export interface NewsStats {
   totalNews: number
-  recentNews: number
   newsBySource: Record<string, number>
+  newsByCategory: Record<string, number>
+  newsBySentiment: Record<string, number>
+  averageMarketImpact: number
+  highImpactNewsCount: number
+  recentNews: News[]
 }
+
 
 // User Summary Types
 export interface UserSummary {

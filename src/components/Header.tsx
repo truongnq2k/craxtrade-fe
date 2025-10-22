@@ -1,92 +1,102 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '../store/auth'
-import { useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+
+// Helper function to get credit package name from package ID
+function getCreditPackageName(packageId: number | undefined): string {
+  if (!packageId || packageId === 0) return 'FREE'
+
+  // Map package IDs to names - these should match the backend credit packages
+  const packageNames: { [key: number]: string } = {
+    1: 'STARTER',
+    2: 'PRO',
+    3: 'BUSINESS',
+    4: 'ENTERPRISE'
+  }
+
+  return packageNames[packageId] || 'CUSTOM'
+}
 
 export function Header() {
   const { i18n } = useTranslation()
   const { userProfile } = useAuthStore()
-  const navigate = useNavigate()
+  const location = useLocation()
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false)
-  const [currentTime, setCurrentTime] = useState(new Date())
 
-  // Update time every second
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [])
+  // Get current page name from pathname
+  const getCurrentPageName = () => {
+    const path = location.pathname
+
+    // Admin routes
+    if (path.startsWith('/admin')) {
+      if (path === '/admin') return 'ADMIN_DASHBOARD'
+      if (path.includes('/users')) return 'USER_MANAGEMENT'
+      if (path.includes('/exchange-accounts')) return 'EXCHANGE_ACCOUNTS'
+      if (path.includes('/bots')) return 'BOT_MANAGEMENT'
+      if (path.includes('/signals')) return 'SIGNAL_MANAGEMENT'
+      if (path.includes('/trades')) return 'TRADE_MANAGEMENT'
+      if (path.includes('/transactions')) return 'TRANSACTION_LOGS'
+      if (path.includes('/vouchers')) return 'VOUCHER_MANAGEMENT'
+      if (path.includes('/credit-packages')) return 'CREDIT_PACKAGES'
+      if (path.includes('/news')) return 'NEWS_MANAGEMENT'
+      return 'ADMIN_PANEL'
+    }
+
+    // User routes
+    if (path.startsWith('/dashboard')) {
+      if (path === '/dashboard') return 'USER_DASHBOARD'
+      if (path.includes('/accounts')) return 'ACCOUNTS'
+      if (path.includes('/create-bot')) return 'CREATE_BOT'
+      if (path.includes('/bots')) return 'TRADING_BOTS'
+      if (path.includes('/signals')) return 'SIGNALS'
+      if (path.includes('/trades')) return 'TRADES'
+      if (path.includes('/transactions')) return 'TRANSACTIONS'
+      if (path.includes('/vouchers')) return 'VOUCHERS'
+      if (path.includes('/news')) return 'NEWS_FEED'
+      return 'USER_PANEL'
+    }
+
+    return 'CRAXTRADING'
+  }
+
+  // Remove time tracking since we don't need countdown timer
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng)
     setIsLangDropdownOpen(false)
   }
 
-  const handleLogout = () => {
-    // Clear auth and redirect to home
-    localStorage.removeItem('token')
-    navigate('/')
-  }
-
+  
   return (
     <header className="bg-black/90 border-b border-green-500/50 backdrop-blur-sm px-4 sm:px-6 py-3">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-6">
-          {/* Terminal Window Controls */}
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-          </div>
-          
           {/* Logo */}
           <h1 className="text-xl font-black text-green-400 font-mono tracking-wider" style={{ textShadow: '0 0 10px #00ff00' }}>
             CRAXTRADING
           </h1>
-          
-          {/* Terminal Status */}
-          <div className="hidden md:flex items-center space-x-4 text-xs font-mono text-green-500">
-            <span className="animate-pulse">SYSTEM: ONLINE</span>
-            <span>•</span>
-            <span>ENCRYPTION: QUANTUM</span>
-          </div>
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Current Time */}
-          <div className="hidden sm:block text-xs font-mono text-green-400">
-            {currentTime.toLocaleTimeString()}
-          </div>
-
+  
           {userProfile && (
             <div className="flex items-center gap-4">
               {/* Credits Display */}
               <div className="bg-black/50 border border-green-500/50 rounded px-3 py-2 font-mono">
                 <div className="text-green-600 text-xs">CREDITS</div>
                 <div className="text-green-400 font-bold text-sm">
-                  {userProfile.credits || '0'}
+                  {userProfile.credits?.toString() || '0'}
                 </div>
               </div>
-              
+
               {/* User Profile */}
               <div className="bg-black/50 border border-green-500/50 rounded px-3 py-2">
                 <div className="text-green-600 text-xs">AGENT</div>
                 <div className="text-green-400 font-mono text-sm max-w-32 truncate">
                   {userProfile.email}
                 </div>
-                <div className="text-green-500 text-xs mt-1 animate-pulse">
-                  STATUS: ACTIVE
-                </div>
               </div>
-
-              {/* Logout Button */}
-              <button
-                onClick={handleLogout}
-                className="px-3 py-2 bg-red-500/20 border border-red-500/50 text-red-400 font-mono text-xs hover:bg-red-500/30 transition-all duration-300"
-              >
-                [LOGOUT]
-              </button>
             </div>
           )}
 

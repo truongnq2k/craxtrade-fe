@@ -53,7 +53,8 @@ export const signalService = {
   },
 
   async getUserSignals(userId: string): Promise<Signal[]> {
-    return apiFetch<Signal[]>(ApiPaths.userSignals(userId))
+    const response = await apiFetch<{success: boolean; data: Signal[]}>(ApiPaths.userSignals(userId))
+    return response.data || []
   },
 
   async getUserSignalSummary(userId: string): Promise<SignalSummary> {

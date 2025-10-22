@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { decodeJwt } from '../utils/jwt'
+import { apiFetch, ApiPaths } from '../utils/api'
 import type { UserProfile } from '../types'
 
 export type DecodedToken = {
@@ -87,24 +88,54 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         console.log('No token available for fetching profile')
         return
       }
-      
-      console.log('Fetching user profile')
-      // We'll implement this later when we have the API profile endpoint ready
-      // For now, we can use the decoded token data as fallback
-      const decoded = state.user
-      if (decoded) {
-          const profileData: UserProfile = {
+
+      console.log('Fetching user profile from API')
+      try {
+        const response = await apiFetch<{success: boolean; data: UserProfile}>(ApiPaths.userProfile)
+        console.log('API response received:', response)
+
+        if (response.success && response.data) {
+          console.log('Setting userProfile in store...')
+          set({ userProfile: response.data })
+          console.log('User profile set in store:', response.data)
+        } else {
+          console.log('Invalid API response format, using fallback')
+          // Fall back to token data if API response is invalid
+          const decoded = state.user
+          if (decoded) {
+            const fallbackProfileData: UserProfile = {
+              id: decoded.sub || decoded.userId || '',
+              email: decoded.email || '',
+              name: decoded.name || '',
+              role: (decoded.role === 'ADMIN' ? 'ADMIN' : 'USER'),
+              isActive: true,
+              credits: 0,
+              creditsPackage: 0,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            }
+            set({ userProfile: fallbackProfileData })
+          }
+        }
+      } catch (apiError) {
+        console.log('API profile fetch failed, using fallback data from token')
+        // Fallback to token data if API fails
+        const decoded = state.user
+        if (decoded) {
+          const fallbackProfileData: UserProfile = {
             id: decoded.sub || decoded.userId || '',
             email: decoded.email || '',
             name: decoded.name || '',
             role: (decoded.role === 'ADMIN' ? 'ADMIN' : 'USER'),
             isActive: true,
-            credits: '0', // Fallback credits
+            credits: 0,
+            creditsPackage: 0,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           }
-        set({ userProfile: profileData })
-        console.log('User profile fetched successfully:', profileData)
+          set({ userProfile: fallbackProfileData })
+          console.log('Using fallback profile data:', fallbackProfileData)
+        }
       }
     } catch (error) {
       console.error('Failed to fetch user profile:', error)

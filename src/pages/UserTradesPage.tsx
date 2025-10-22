@@ -18,12 +18,6 @@ type Trade = {
   pnl?: number
 }
 
-interface MatrixDrop {
-  x: number
-  y: number
-  speed: number
-}
-
 export function UserTradesPage() {
   const { user } = useAuthStore()
   const [trades, setTrades] = useState<Trade[]>([])
@@ -38,33 +32,11 @@ export function UserTradesPage() {
     bestTrade?: { symbol: string; pnl: number };
     worstTrade?: { symbol: string; pnl: number };
   } | null>(null)
-  const [matrixRain, setMatrixRain] = useState<MatrixDrop[]>([])
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [filterSymbol, setFilterSymbol] = useState<string>('')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(10)
   const [closingTrade, setClosingTrade] = useState<string | null>(null)
-
-  // Matrix rain effect
-  useEffect(() => {
-    const columns = Math.floor(window.innerWidth / 28)
-    const drops = Array(columns).fill(0).map(() => ({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight - window.innerHeight,
-      speed: Math.random() * 2 + 0.5
-    }))
-    setMatrixRain(drops)
-
-    const animateRain = () => {
-      setMatrixRain(prev => prev.map(drop => ({
-        ...drop,
-        y: drop.y > window.innerHeight ? 0 : drop.y + drop.speed
-      })))
-    }
-
-    const interval = setInterval(animateRain, 70)
-    return () => clearInterval(interval)
-  }, [])
 
   useEffect(() => {
     loadTrades()
@@ -231,7 +203,7 @@ export function UserTradesPage() {
             [TRADE_TERMINAL]
           </h1>
           <p className="text-green-600 text-sm font-mono mt-1">
-            $ ./execute_trade_monitor.sh
+            Trade Management
           </p>
         </div>
         <button 
@@ -249,46 +221,13 @@ export function UserTradesPage() {
         </div>
       )}
 
-      {/* Matrix Rain Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-        {matrixRain.map((drop, i) => (
-          <div
-            key={i}
-            className="absolute text-green-500 text-xs font-mono opacity-50"
-            style={{
-              left: `${drop.x}px`,
-              top: `${drop.y}px`,
-              transform: `translateY(${drop.y}px)`
-            }}
-          >
-            {String.fromCharCode(0x30A0 + Math.random() * 96)}
-          </div>
-        ))}
-      </div>
-
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slideUp {
-          from { 
-            opacity: 0;
-            transform: translateY(20px) scale(0.95);
-          }
-          to { 
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-      `}</style>
-
+      
       {/* Trade Summary Cards */}
       {tradeSummary && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-black/90 border border-green-500/50 rounded-lg p-4 hover:border-green-400/50 transition-all duration-300">
-            <div className="text-green-600 text-xs font-mono mb-2 animate-pulse">
-              $ ./total_trades.sh
+            <div className="text-green-600 text-xs font-mono mb-2">
+              Total Trades
             </div>
             <div className="text-3xl font-bold text-green-400 font-mono mb-1">
               {tradeSummary.totalTrades || 0}
@@ -299,8 +238,8 @@ export function UserTradesPage() {
           </div>
 
           <div className="bg-black/90 border border-green-500/50 rounded-lg p-4 hover:border-green-400/50 transition-all duration-300">
-            <div className="text-green-600 text-xs font-mono mb-2 animate-pulse">
-              $ ./open_positions.sh
+            <div className="text-green-600 text-xs font-mono mb-2">
+              Open Positions
             </div>
             <div className="text-3xl font-bold text-blue-400 font-mono mb-1">
               {tradeSummary.openTrades || 0}
@@ -311,8 +250,8 @@ export function UserTradesPage() {
           </div>
 
           <div className="bg-black/90 border border-green-500/50 rounded-lg p-4 hover:border-green-400/50 transition-all duration-300">
-            <div className="text-green-600 text-xs font-mono mb-2 animate-pulse">
-              $ ./total_pnl.sh
+            <div className="text-green-600 text-xs font-mono mb-2">
+              Total P/L
             </div>
             <div className="text-3xl font-bold text-yellow-400 font-mono mb-1">
               {formatPrice(tradeSummary.totalPnl)}
@@ -323,8 +262,8 @@ export function UserTradesPage() {
           </div>
 
           <div className="bg-black/90 border border-green-500/50 rounded-lg p-4 hover:border-green-400/50 transition-all duration-300">
-            <div className="text-green-600 text-xs font-mono mb-2 animate-pulse">
-              $ ./win_rate.sh
+            <div className="text-green-600 text-xs font-mono mb-2">
+              Win Rate
             </div>
             <div className="text-3xl font-bold text-cyan-400 font-mono mb-1">
               {tradeSummary.winRate ? Math.round(tradeSummary.winRate) : 0}%
@@ -338,8 +277,8 @@ export function UserTradesPage() {
 
       {/* Trade List */}
       <div className="bg-black/90 border border-green-500/30 rounded-lg p-6">
-        <div className="text-green-600 text-xs font-mono mb-6 animate-pulse">
-          $ ./load_trade_database.sh
+        <div className="text-green-600 text-xs font-mono mb-6">
+          Trade Database
         </div>
 
         {/* Filters */}
@@ -376,11 +315,11 @@ export function UserTradesPage() {
         {/* Loading State */}
         {loading && (
           <div className="text-center py-8 text-green-600">
-            <div className="text-sm font-mono animate-pulse">
-              $ ./loading_trades.sh
+            <div className="text-sm font-mono">
+              Loading...
             </div>
             <div className="text-xs mt-2">
-              Retrieving trade data from quantum database...
+              Please wait while we load the data
             </div>
           </div>
         )}
@@ -390,7 +329,7 @@ export function UserTradesPage() {
           <div className="text-center py-12 text-green-600">
             <div className="text-8xl mb-4">📋</div>
             <div className="text-sm font-mono mb-2">
-              $ ./no_trades_found.sh
+              No trades found
             </div>
             <div className="text-xs mt-2">
               No trades found for the selected criteria
@@ -480,7 +419,7 @@ export function UserTradesPage() {
             {/* Pagination */}
             <div className="flex justify-between items-center mt-6 pt-4 border-t border-green-500/30">
               <div className="text-green-600 text-xs font-mono">
-                <div className="animate-pulse">Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, filteredTrades.length)}</div>
+                <div>Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, filteredTrades.length)}</div>
                 <div className="mt-1">Total: {filteredTrades.length} trades</div>
               </div>
               <div className="flex space-x-2">
@@ -509,15 +448,7 @@ export function UserTradesPage() {
           </>
         )}
 
-        {/* Terminal Info */}
-        <div className="mt-6 text-center">
-          <div className="text-xs font-mono text-green-600">
-            <div className="animate-pulse">DATABASE: CONNECTED</div>
-            <div className="mt-1">ENCRYPTION: QUANTUM</div>
-            <div className="mt-1">STATUS: SECURE</div>
-          </div>
         </div>
-      </div>
     </div>
   )
 }

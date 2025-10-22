@@ -49,30 +49,8 @@ export function CreateBotPage() {
     isHedgeMode: false,
     exchangeAccountId: ''
   })
-  const [matrixRain, setMatrixRain] = useState<Array<{ x: number; y: number; speed: number }>>([])
   const [isSymbolModalOpen, setIsSymbolModalOpen] = useState(false)
   const [selectedTimeframe, setSelectedTimeframe] = useState('H1')
-
-  // Matrix rain effect
-  useEffect(() => {
-    const columns = Math.floor(window.innerWidth / 20)
-    const drops = Array(columns).fill(0).map(() => ({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight - window.innerHeight,
-      speed: Math.random() * 2 + 1
-    }))
-    setMatrixRain(drops)
-
-    const animateRain = () => {
-      setMatrixRain(prev => prev.map(drop => ({
-        ...drop,
-        y: drop.y > window.innerHeight ? 0 : drop.y + drop.speed
-      })))
-    }
-
-    const interval = setInterval(animateRain, 50)
-    return () => clearInterval(interval)
-  }, [])
 
   useEffect(() => {
     async function loadExchangeAccounts() {
@@ -140,41 +118,7 @@ export function CreateBotPage() {
 
   return (
     <div className="min-h-screen bg-black/90 p-8">
-      {/* Matrix Rain Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-        {matrixRain.map((drop, i) => (
-          <div
-            key={i}
-            className="absolute text-green-500 text-xs font-mono opacity-70"
-            style={{
-              left: `${drop.x}px`,
-              top: `${drop.y}px`,
-              transform: `translateY(${drop.y}px)`
-            }}
-          >
-            {String.fromCharCode(0x30A0 + Math.random() * 96)}
-          </div>
-        ))}
-      </div>
-
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        @keyframes slideUp {
-          from { 
-            opacity: 0;
-            transform: translateY(20px) scale(0.95);
-          }
-          to { 
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-      `}</style>
-
+      
       <div className="max-w-4xl mx-auto" style={{ animation: 'fadeIn 0.5s ease-in-out' }}>
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -183,7 +127,7 @@ export function CreateBotPage() {
               [CREATE_QUANTUM_BOT]
             </h1>
             <p className="text-green-600 text-sm font-mono mt-2">
-              $ ./init_quantum_trading_protocol.sh
+              Configure your trading bot
             </p>
           </div>
           <button
@@ -206,8 +150,8 @@ export function CreateBotPage() {
           className="bg-black/90 border border-green-500/50 rounded-lg p-8 transform"
           style={{ animation: 'slideUp 0.3s ease-out' }}
         >
-          <div className="text-green-600 text-xs font-mono mb-6 animate-pulse">
-            $ ./configure_quantum_algorithm.sh
+          <div className="text-green-600 text-xs font-mono mb-6">
+            Bot Configuration
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -393,7 +337,7 @@ export function CreateBotPage() {
             {/* Submit Button */}
             <div className="flex justify-between items-center pt-6 border-t border-green-500/50">
               <div className="text-xs font-mono text-green-600">
-                <div className="animate-pulse">PROTOCOL: QUANTUM_READY</div>
+                <div>PROTOCOL: QUANTUM_READY</div>
                 <div className="mt-1">ENCRYPTION: AES-256</div>
                 <div className="mt-1">STATUS: SECURE</div>
               </div>
